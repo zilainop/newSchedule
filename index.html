@@ -84,7 +84,12 @@
             font-size: 1.1rem;
         }
 
-        .theme-toggle {
+        .header-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .theme-toggle, .settings-btn {
             background-color: var(--card-bg);
             border: 2px solid var(--border-color);
             color: var(--text-color);
@@ -98,7 +103,7 @@
             transition: var(--transition);
         }
 
-        .theme-toggle:hover {
+        .theme-toggle:hover, .settings-btn:hover {
             background-color: var(--primary-color);
             color: white;
             border-color: var(--primary-color);
@@ -568,6 +573,52 @@
             margin-bottom: 10px;
         }
 
+        /* Color options for settings */
+        .color-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .color-option {
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            border: 2px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .color-option:hover {
+            transform: scale(1.05);
+        }
+
+        .color-option.selected {
+            border-color: var(--text-color);
+            box-shadow: 0 0 0 2px var(--primary-color);
+        }
+
+        .color-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+        }
+
+        .color-name {
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        /* Specific color options */
+        .color-red { background-color: #ff0000; }
+        .color-blue { background-color: #4285f4; }
+        .color-green { background-color: #34A853; }
+        .color-purple { background-color: #9c27b0; }
+        .color-orange { background-color: #ff9800; }
+        .color-teal { background-color: #009688; }
+
         @media (max-width: 768px) {
             body {
                 padding: 15px;
@@ -599,6 +650,16 @@
                 flex-direction: column;
                 text-align: center;
             }
+            
+            .header-controls {
+                flex-direction: column;
+                width: 100%;
+                max-width: 200px;
+            }
+            
+            .color-options {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
     </style>
 </head>
@@ -611,9 +672,14 @@
                     <p class="tagline">Track your YouTube video creation progress across multiple channels</p>
                 </div>
             </div>
-            <button class="theme-toggle" id="theme-toggle">
-                <i class="fas fa-sun"></i> Light Mode
-            </button>
+            <div class="header-controls">
+                <button class="settings-btn" id="settings-btn">
+                    <i class="fas fa-cog"></i> Settings
+                </button>
+                <button class="theme-toggle" id="theme-toggle">
+                    <i class="fas fa-sun"></i> Light Mode
+                </button>
+            </div>
         </header>
         
         <div class="progress-container">
@@ -651,10 +717,10 @@
         
         <footer>
             <div class="footer-info">
-                <p>Your data is stored locally on this device | Made with <i class="fas fa-heart" style="color: #ff0000;"></i> for YouTube creators</p>
+                <p>Your data is stored locally on this device | Made with <i class="fas fa-heart" style="color: var(--primary-color);"></i> for YouTube creators</p>
             </div>
             <button class="refresh-btn" id="refresh-btn">
-                <i class="fas fa-redo"></i> Refresh Progress
+                <i class="fas fa-redo"></i> Reset Progress
             </button>
         </footer>
     </div>
@@ -686,6 +752,52 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Settings</h2>
+                <button class="close-btn" id="close-settings-modal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Primary Color Theme</label>
+                <p style="color: var(--text-secondary); margin-bottom: 15px; font-size: 0.9rem;">
+                    Choose a color for progress indicators, buttons, and headings
+                </p>
+                <div class="color-options">
+                    <div class="color-option" data-color="#ff0000" data-color-name="red">
+                        <div class="color-preview color-red"></div>
+                        <div class="color-name">Red</div>
+                    </div>
+                    <div class="color-option" data-color="#4285f4" data-color-name="blue">
+                        <div class="color-preview color-blue"></div>
+                        <div class="color-name">Blue</div>
+                    </div>
+                    <div class="color-option" data-color="#34A853" data-color-name="green">
+                        <div class="color-preview color-green"></div>
+                        <div class="color-name">Green</div>
+                    </div>
+                    <div class="color-option" data-color="#9c27b0" data-color-name="purple">
+                        <div class="color-preview color-purple"></div>
+                        <div class="color-name">Purple</div>
+                    </div>
+                    <div class="color-option" data-color="#ff9800" data-color-name="orange">
+                        <div class="color-preview color-orange"></div>
+                        <div class="color-name">Orange</div>
+                    </div>
+                    <div class="color-option" data-color="#009688" data-color-name="teal">
+                        <div class="color-preview color-teal"></div>
+                        <div class="color-name">Teal</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="cancel-btn" id="cancel-settings">Cancel</button>
+                <button type="button" class="save-btn" id="save-settings">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // DOM Elements
         const addChannelBtn = document.getElementById('add-channel-btn');
@@ -700,6 +812,14 @@
         const modalTitle = document.getElementById('modal-title');
         const saveChannelBtn = document.getElementById('save-channel');
         
+        // Settings modal elements
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const closeSettingsBtn = document.getElementById('close-settings-modal');
+        const cancelSettingsBtn = document.getElementById('cancel-settings');
+        const saveSettingsBtn = document.getElementById('save-settings');
+        const colorOptions = document.querySelectorAll('.color-option');
+        
         // Progress elements
         const progressPercentage = document.querySelector('.progress-percentage');
         const progressFill = document.querySelector('.progress-fill');
@@ -712,11 +832,13 @@
         let channels = [];
         let editingIndex = -1; // -1 means adding new channel, otherwise editing existing
         let isLightMode = false;
+        let selectedColor = '#ff0000'; // Default color
         
         // Initialize app
         document.addEventListener('DOMContentLoaded', () => {
             loadChannels();
             loadTheme();
+            loadColor();
             updateUI();
         });
         
@@ -733,6 +855,42 @@
                 themeToggle.innerHTML = '<i class="fas fa-sun"></i> Light Mode';
             }
             saveTheme();
+        });
+        
+        // Settings button
+        settingsBtn.addEventListener('click', () => {
+            settingsModal.style.display = 'flex';
+        });
+        
+        closeSettingsBtn.addEventListener('click', () => {
+            settingsModal.style.display = 'none';
+        });
+        
+        cancelSettingsBtn.addEventListener('click', () => {
+            settingsModal.style.display = 'none';
+        });
+        
+        // Color selection
+        colorOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                // Remove selected class from all options
+                colorOptions.forEach(opt => opt.classList.remove('selected'));
+                // Add selected class to clicked option
+                option.classList.add('selected');
+                selectedColor = option.dataset.color;
+            });
+        });
+        
+        // Save settings
+        saveSettingsBtn.addEventListener('click', () => {
+            document.documentElement.style.setProperty('--primary-color', selectedColor);
+            // Calculate a darker version for hover
+            const hoverColor = adjustColor(selectedColor, -30);
+            document.documentElement.style.setProperty('--primary-hover', hoverColor);
+            saveColor();
+            settingsModal.style.display = 'none';
+            showNotification('Color theme updated!');
+            updateUI();
         });
         
         // Modal handlers
@@ -800,13 +958,25 @@
             channelModal.style.display = 'none';
         });
         
-        // Refresh button
+        // Refresh/Reset button - FIXED
         refreshBtn.addEventListener('click', () => {
-            updateUI();
-            showNotification('Progress refreshed!');
+            if (confirm('Are you sure you want to reset all video progress to 0%? This will keep all your channels but mark all videos as incomplete.')) {
+                resetAllProgress();
+                showNotification('All progress has been reset to 0%');
+            }
         });
         
         // Functions
+        function resetAllProgress() {
+            channels.forEach(channel => {
+                channel.videoProgress = Array(channel.videosCount).fill(false);
+                channel.completedVideos = 0;
+                channel.completed = false;
+            });
+            saveChannels();
+            updateUI();
+        }
+        
         function updateUI() {
             // Hide/show empty state
             if (channels.length === 0) {
@@ -976,6 +1146,26 @@
             }
         }
         
+        // Color utility function
+        function adjustColor(color, amount) {
+            // Remove the hash if present
+            color = color.replace('#', '');
+            
+            // Parse the color components
+            let r = parseInt(color.substr(0, 2), 16);
+            let g = parseInt(color.substr(2, 2), 16);
+            let b = parseInt(color.substr(4, 2), 16);
+            
+            // Adjust the color
+            r = Math.max(0, Math.min(255, r + amount));
+            g = Math.max(0, Math.min(255, g + amount));
+            b = Math.max(0, Math.min(255, b + amount));
+            
+            // Convert back to hex
+            const newColor = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+            return newColor;
+        }
+        
         function showNotification(message) {
             // Create notification element
             const notification = document.createElement('div');
@@ -1050,6 +1240,27 @@
                     document.body.classList.add('dark-mode');
                     themeToggle.innerHTML = '<i class="fas fa-sun"></i> Light Mode';
                 }
+            }
+        }
+        
+        function saveColor() {
+            localStorage.setItem('youtubeTrackerColor', selectedColor);
+        }
+        
+        function loadColor() {
+            const savedColor = localStorage.getItem('youtubeTrackerColor');
+            if (savedColor) {
+                selectedColor = savedColor;
+                document.documentElement.style.setProperty('--primary-color', selectedColor);
+                const hoverColor = adjustColor(selectedColor, -30);
+                document.documentElement.style.setProperty('--primary-hover', hoverColor);
+                
+                // Update selected color in settings modal
+                colorOptions.forEach(option => {
+                    if (option.dataset.color === selectedColor) {
+                        option.classList.add('selected');
+                    }
+                });
             }
         }
     </script>
